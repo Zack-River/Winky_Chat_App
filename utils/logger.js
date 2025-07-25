@@ -1,3 +1,5 @@
 module.exports = {
-  log: (msg) => console.log(`[LOG] ${msg}`),
+  log: (msg) => {
+    console.log(`[WINKY] ${msg}`);
+  }
 };

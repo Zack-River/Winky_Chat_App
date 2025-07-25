@@ -1,11 +1,6 @@
-const urlParams = new URLSearchParams(window.location.search);
-let username = urlParams.get('username');
+let username = prompt('Enter your name:') || 'Anonymous';
 
-if (!username) {
-  username = prompt('Enter your name:') || 'Anonymous';
-}
-
-const socket = io('http://localhost:3000');
+const socket = io(); // Relative path works on production
 
 socket.on('connect', () => {
   socket.emit('join', username);
