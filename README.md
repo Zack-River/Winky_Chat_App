@@ -29,8 +29,8 @@ Winky is a simple, fun, real-time web chat app built with **Node.js**, **Express
 ### 1️⃣ Clone the repository
 
 ```bash
-git clone https://github.com/Zack-River/Winky_Chat_Appt.git
-cd winky-chat
+git clone https://github.com/Zack-River/Winky_Chat_App.git
+cd Winky_Chat_App
 ```
 
 ### 2️⃣ Install dependencies
