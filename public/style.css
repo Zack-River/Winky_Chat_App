@@ -31,6 +31,16 @@ h1 {
   color: #00e676;
 }
 
+h2 {
+  font-size: 1.2rem;
+  font-weight: 400;
+  margin: 5px 0 15px 0;
+  color: #ccc;
+  text-align: center;
+  font-style: italic;
+  letter-spacing: 0.5px;
+}
+
 #online {
   align-self: flex-start;
   font-size: 0.85rem;
