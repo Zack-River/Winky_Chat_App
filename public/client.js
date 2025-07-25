@@ -6,7 +6,7 @@ if (!username) {
   localStorage.setItem('winky_username', username);
 }
 
-const socket = io(); // automatically uses the same origin
+const socket = io();
 
 socket.on('connect', () => {
   socket.emit('join', username);
