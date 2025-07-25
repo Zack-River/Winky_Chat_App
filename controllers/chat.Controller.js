@@ -1,4 +1,4 @@
-const User = require('../model/user.Model');
+const User = require('../models/user.Model');
 
 module.exports = (io, socket) => {
   console.log('A user connected');
