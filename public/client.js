@@ -52,3 +52,5 @@ socket.on('system', (msg) => {
 socket.on('online-users', (list) => {
   users.textContent = list.join(', ');
 });
+
+console.log("Client connected to server");
