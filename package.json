@@ -1,8 +1,7 @@
 {
-  "name": "Winky_Chat_App",
+  "name": "winky_chat_app",
   "version": "1.0.0",
   "description": "Stay connected with just a Wink — simple real-time chat app with Node.js, Express, and Socket.IO.",
-  "license": "ISC",
   "author": "",
   "type": "commonjs",
   "main": "server.js",
