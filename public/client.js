@@ -1,6 +1,12 @@
-let username = prompt('Enter your name:') || 'Anonymous';
+// ✅ 1️⃣ Get username from localStorage
+let username = localStorage.getItem('winky_username');
 
-const socket = io(); // Relative path works on production
+if (!username) {
+  username = prompt('Enter your name:') || 'Anonymous';
+  localStorage.setItem('winky_username', username);
+}
+
+const socket = io(); // automatically uses the same origin
 
 socket.on('connect', () => {
   socket.emit('join', username);
@@ -11,6 +17,7 @@ const input = document.getElementById('input');
 const messages = document.getElementById('messages');
 const users = document.getElementById('users');
 
+// ✅ 2️⃣ Prevent default reload on submit
 form.addEventListener('submit', (e) => {
   e.preventDefault();
   if (input.value.trim()) {
