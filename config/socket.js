@@ -1,5 +1,5 @@
 const { Server } = require('socket.io');
-const chatController = require('../controller/chat.Controller');
+const chatController = require('../controllers/chat.Controller');
 
 module.exports = (httpServer) => {
   const io = new Server(httpServer, {
