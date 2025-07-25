@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Real-Time Chat</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app">
+    <h1>Chat App</h1>
+
+    <div id="online"><strong>Online Users:</strong> <span id="users"></span></div>
+
+    <div class="container" id="messages"></div>
+
+    <form id="form">
+      <input id="input" autocomplete="off" placeholder="Type a message..." />
+      <button id="sendButton">Send</button>
+    </form>
+  </div>
+
+  <script src="http://localhost:3000/socket.io/socket.io.js"></script>
+<script>
+  const urlParams = new URLSearchParams(window.location.search);
+  let username = urlParams.get('username');
+
+  if (!username) {
+    username = prompt('Enter your name:') || 'Anonymous';
+  }
+
+  const socket = io('http://localhost:3000');
+
+  socket.on('connect', () => {
+    socket.emit('join', username);
+  });
+
+  const form = document.getElementById('form');
+  const input = document.getElementById('input');
+  const messages = document.getElementById('messages');
+  const users = document.getElementById('users');
+
+  form.addEventListener('Keydown' , (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      submit();
+    }
+  });
+  function sendMessage() {
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        if (input.value.trim()) {
+        socket.emit('message', input.value.trim());
+        input.value = '';
+        }
+    });
+    }
+
+  sendMessage();
+
+  socket.on('message', (data) => {
+    const item = document.createElement('div');
+    item.classList.add('message');
+
+    if (data.from === username) {
+      item.classList.add('you');
+    } else {
+      item.classList.add('reply');
+    }
+
+    item.textContent = `[${data.time}] ${data.from}: ${data.text}`;
+    messages.appendChild(item);
+    messages.scrollTop = messages.scrollHeight;
+  });
+
+  socket.on('system', (msg) => {
+    const item = document.createElement('div');
+    item.classList.add('system');
+    item.textContent = msg;
+    messages.appendChild(item);
+    messages.scrollTop = messages.scrollHeight;
+  });
+
+  socket.on('online-users', (list) => {
+    users.textContent = list.join(', ');
+  });
+</script>
+
+</body>
+</html>
