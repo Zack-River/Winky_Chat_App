@@ -40,7 +40,7 @@ form.addEventListener("submit", (e) => {
 input.addEventListener("keypress", (e) => {
   if (e.key === "Enter" && !e.shiftKey) {
     e.preventDefault();
-    form.dispatchEvent(new Event("submit"));
+    form.requestSubmit();
   }
 });
 
@@ -165,7 +165,7 @@ const easterEggs = {
   ghost: "👻",
   alien: "👽",
   poop: "💩",
-  fuck: "🖕",
+  fuck: "🖕🏿",
   shit: "💩",
   devil: "😈",
   angel: "😇",
