@@ -13,16 +13,15 @@ module.exports = (io, socket) => {
     io.emit('online-users', User.getOnlineUsers());
   });
 
-  socket.on('message', (msg) => {
-    const name = socket.username || 'Anonymous';
-    const time = new Date().toLocaleTimeString([], {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-
-    const payload = { from: name, text: msg, time };
-    io.emit('message', payload);
-  });
+socket.on("message", (payload) => {
+  const name = socket.username || "Anonymous";
+  const finalPayload = {
+    from: name,
+    text: payload.text,
+    time: payload.time
+  };
+  io.emit("message", finalPayload);
+});
 
   socket.on('disconnect', () => {
     const name = socket.username || 'Anonymous';

@@ -2,25 +2,86 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Real-Time Chat</title>
-  <link rel="stylesheet" href="style.css">
+  <title>👀 Winky Chat</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="./images/favicon.ico" type="image/x-icon" />
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <div class="background-animation">
+    <div class="floating-bubble"></div>
+    <div class="floating-bubble"></div>
+    <div class="floating-bubble"></div>
+    <div class="floating-bubble"></div>
+    <div class="floating-bubble"></div>
+  </div>
+
   <div class="app">
-    <h1>Chat App</h1>
-    <h2>Stay connected with just a Wink. 😉</h2>
+    <header class="header"> 
+      <div class="logo-container">
+        <img src="./images/logo.png" alt="winky app logo">
+        <h1 class="logo-text">Winky</h1>
+        <div class="wink-animation">😉</div>
+      </div>
+      <p class="tagline">Stay connected with just a Wink.</p>
 
-    <div id="online"><strong>Online Users:</strong> <span id="users"></span></div>
+      <div class="online-indicator">
+        <div class="pulse-dot"></div>
+        <span class="online-text">Online: </span>
+        <span id="users" class="user-count">0</span>
+      </div>
+      <div id="user-list" class="online-list"></div>
 
-    <div class="container" id="messages"></div>
+      <div class="actions">
+        <!-- ✅ THEME TOGGLE BUTTON -->
+      <button id="themeToggleBtn" class="icon-btn" title="Toggle Theme">🌙</button>
 
-    <form id="form">
-      <input id="input" autocomplete="off" placeholder="Type a message..." />
-      <button id="sendButton">Send</button>
+      <!-- ✅ CLEAR CHAT BUTTON -->
+      <button id="clearChatBtn" class="icon-btn" title="Clear Chat">🗑️</button>
+      </div>
+    </header>
+
+    <main class="chat-area">
+      <div class="messages" id="messages">
+        <div class="welcome-message">
+          <div class="welcome-icon">🎉</div>
+          <p>Welcome to Winky! Start chatting instantly</p>
+        </div>
+      </div>
+    </main>
+
+    <form id="form" class="message-form">
+      <!-- ✅ Emoji button only -->
+      <button type="button" id="emojiBtn" class="icon-btn">😊</button>
+
+      <div class="input-container">
+        <input 
+          id="input" 
+          placeholder="Type your message..." 
+          autocomplete="off" 
+          maxlength="500"
+        />
+        <div class="input-glow"></div>
+      </div>
+
+      <button id="sendButton" type="submit" class="send-button">
+        <svg viewBox="0 0 24 24">
+          <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+        </svg>
+      </button>
     </form>
+
+    <!-- ✅ Emoji Modal -->
+    <div id="emojiModal" class="modal hidden">
+      <div class="emoji-item">😂</div>
+      <div class="emoji-item">🔥</div>
+      <div class="emoji-item">🎉</div>
+      <div class="emoji-item">❤️</div>
+      <div class="emoji-item">😉</div>
+    </div>
   </div>
 
   <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
-  <script src="./client.js"></script>
+  <script src="client.js"></script>
 </body>
 </html>
