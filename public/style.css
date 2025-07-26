@@ -64,6 +64,8 @@ body {
   overflow: hidden;
   position: relative;
   z-index: 1;
+  padding-top: env(safe-area-inset-top, 16px);
+  padding-bottom: env(safe-area-inset-bottom, 16px);
 }
 
 /* Header */
@@ -169,6 +171,7 @@ body {
   padding: 20px;
   overflow-y: auto;
   background: #121212;
+  padding-bottom: calc(20px + env(safe-area-inset-bottom, 16px));
 }
 
 .messages {
@@ -243,6 +246,7 @@ body {
   display: flex;
   align-items: center;
   padding: 20px;
+  padding-bottom: calc(20px + env(safe-area-inset-bottom, 16px));
   background: #1e1e1e;
   border-top: 1px solid #333;
   gap: 12px;
