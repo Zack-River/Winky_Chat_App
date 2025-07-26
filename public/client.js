@@ -55,16 +55,27 @@ function removeWelcome() {
 }
 
 function addMessage({ from, time, text }) {
-  removeWelcome(); // ✅ Remove welcome message
   const messageEl = document.createElement("div");
   messageEl.classList.add("message", from === username ? "you" : "reply");
+
   const d = new Date(time);
   const timeStr = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-  messageEl.innerHTML = `<div style="font-size: 0.75rem; opacity:0.7;">${from} • ${timeStr}</div><div>${escapeHtml(text)}</div>`;
+
+  messageEl.innerHTML = `
+    <div style="font-size: 0.75rem; opacity:0.7;">${from} • ${timeStr}</div>
+    <div>${escapeHtml(text)}</div>
+  `;
+
   messages.appendChild(messageEl);
 
-  messageEl.scrollIntoView({ behavior: "smooth", block: "end" }); // ✅ Always scroll last
-  playSound(from === username ? "send" : "receive");
+  // Remove welcome message if present
+  const welcome = document.querySelector(".welcome-message");
+  if (welcome) welcome.remove();
+
+  playSound('receive');
+
+  // Instead of scrollTo, use scrollIntoView for the new element:
+  messageEl.scrollIntoView({ behavior: "smooth", block: "end" });
 }
 
 function addSystemMessage(msg) {
