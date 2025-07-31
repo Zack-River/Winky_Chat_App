@@ -268,6 +268,7 @@ startCallBtn.onclick = async () => {
       video: { width: 640, height: 480 },
       audio: true
     });
+    addDummyNoise(localStream);
 
     videoArea.style.display = "block";
     localVideo.srcObject = localStream;
@@ -418,4 +419,20 @@ function createPeerConnection(peerId) {
 
   peers[peerId] = pc;
   return pc;
+}
+
+function addDummyNoise(localStream) {
+  const ctx = new AudioContext();
+  const oscillator = ctx.createOscillator();
+  const dst = ctx.createMediaStreamDestination();
+  
+  oscillator.type = 'sine';
+  oscillator.frequency.setValueAtTime(1000, ctx.currentTime); // 1 kHz test tone
+  oscillator.start();
+  oscillator.stop(ctx.currentTime + 0.05); // super short
+
+  oscillator.connect(dst);
+
+  const dummyTrack = dst.stream.getAudioTracks()[0];
+  localStream.addTrack(dummyTrack);
 }
