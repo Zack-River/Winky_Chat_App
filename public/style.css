@@ -410,7 +410,10 @@ body {
   z-index: 2;
 }
 
-#emojiModal.hidden { display: none; }
+
+#emojiModal.hidden {
+  display: none !important;
+}
 
 .emoji-item {
   cursor: pointer;
