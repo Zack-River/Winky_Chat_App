@@ -242,59 +242,58 @@ function playSound(type) {
   try {
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     const audioContext = new AudioContext();
+    if (audioContext.state === 'suspended') audioContext.resume();
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
     oscillator.connect(gainNode);
     gainNode.connect(audioContext.destination);
-    let freqStart = 800,
-      freqEnd = 800;
+    let freqStart = 800, freqEnd = 800;
     switch (type) {
-      case "send":
-        freqStart = 700;
-        freqEnd = 900;
-        break;
-      case "receive":
-        freqStart = 500;
-        freqEnd = 400;
-        break;
-      case "join":
-        freqStart = 600;
-        freqEnd = 750;
-        break;
-      case "leave":
-        freqStart = 500;
-        freqEnd = 350;
-        break;
+      case "send": freqStart = 700; freqEnd = 900; break;
+      case "receive": freqStart = 500; freqEnd = 400; break;
+      case "join": freqStart = 600; freqEnd = 750; break;
+      case "leave": freqStart = 500; freqEnd = 350; break;
     }
     oscillator.type = "sine";
     oscillator.frequency.setValueAtTime(freqStart, audioContext.currentTime);
-    oscillator.frequency.exponentialRampToValueAtTime(
-      freqEnd,
-      audioContext.currentTime + 0.15
-    );
+    oscillator.frequency.exponentialRampToValueAtTime(freqEnd, audioContext.currentTime + 0.15);
     gainNode.gain.setValueAtTime(0.05, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(
-      0.0001,
-      audioContext.currentTime + 0.2
-    );
+    gainNode.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.2);
     oscillator.start(audioContext.currentTime);
     oscillator.stop(audioContext.currentTime + 0.2);
   } catch (e) {}
 }
 
 ////////////////////////////////////////////////
-// ✅ VIDEO CALL: MULTI-PEER WITH CLEANUP
+// ✅ VIDEO CALL: SELECT MIC + MULTI-PEER
 ////////////////////////////////////////////////
+
+async function getAudioInputDevices() {
+  const devices = await navigator.mediaDevices.enumerateDevices();
+  return devices.filter(d => d.kind === "audioinput");
+}
+
+async function chooseAudioInput() {
+  const mics = await getAudioInputDevices();
+  console.log("Available mics:", mics);
+  if (mics.length <= 1) return mics[0].deviceId;
+  const choice = prompt(
+    "Choose mic:\n" + mics.map((m, i) => `[${i}] ${m.label}`).join("\n")
+  );
+  return mics[choice] ? mics[choice].deviceId : mics[0].deviceId;
+}
+
 let localStream;
 const peers = {};
 const peerNames = {};
 let myPeerId = null;
 
-// START CALL
 startCallBtn.onclick = async () => {
   try {
+    const deviceId = await chooseAudioInput();
     localStream = await navigator.mediaDevices.getUserMedia({
       audio: {
+        deviceId: deviceId ? { exact: deviceId } : undefined,
         echoCancellation: true,
         noiseSuppression: true,
         autoGainControl: true,
@@ -302,11 +301,8 @@ startCallBtn.onclick = async () => {
       video: { width: 640, height: 480 },
     });
 
-    console.log("Local audio tracks:", localStream.getAudioTracks());
-
+    console.log("Using audio device:", deviceId);
     videoArea.style.display = "block";
-
-    // ✅ show full local stream, both audio+video
     localVideo.srcObject = localStream;
     localVideo.muted = true;
     localVideo.play();
@@ -322,15 +318,10 @@ startCallBtn.onclick = async () => {
         const audioTrack = localStream.getAudioTracks()[0];
         audioTrack.enabled = !audioTrack.enabled;
         muteBtn.textContent = audioTrack.enabled ? "🔇" : "🎙️";
-      } else {
-        console.log("No local audio track to mute/unmute.");
       }
     };
 
-    leaveCallBtn.onclick = () => {
-      stopCall();
-    };
-
+    leaveCallBtn.onclick = stopCall;
   } catch (err) {
     console.error(err);
     alert("Could not access camera/mic");
@@ -422,7 +413,7 @@ function createPeerConnection(peerId) {
       const video = document.createElement("video");
       video.autoplay = true;
       video.playsInline = true;
-      video.muted = false; // 👈 allow audio to play
+      video.muted = false;
 
       const label = document.createElement("div");
       label.className = "video-label";
