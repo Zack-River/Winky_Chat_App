@@ -297,25 +297,41 @@ startCallBtn.onclick = async () => {
       audio: {
         echoCancellation: true,
         noiseSuppression: true,
-        autoGainControl: true
+        autoGainControl: true,
       },
-      video: { width: 640, height: 480 }
+      video: { width: 640, height: 480 },
     });
 
     console.log("Local audio tracks:", localStream.getAudioTracks());
 
     videoArea.style.display = "block";
 
-    // Only play video locally, not audio
-    localVideo.srcObject = new MediaStream(localStream.getVideoTracks());
+    // ✅ Play full local stream (video + audio goes to peers)
+    localVideo.srcObject = localStream;
     localVideo.muted = true;
-    localVideo.play();
+    await localVideo.play();
 
     muteBtn.disabled = false;
     leaveCallBtn.disabled = false;
     startCallBtn.disabled = true;
 
     socket.emit("join-video", { username });
+
+    // ✅ Global mute button works
+    muteBtn.onclick = () => {
+      const audioTrack = localStream?.getAudioTracks()[0];
+      if (audioTrack) {
+        audioTrack.enabled = !audioTrack.enabled;
+        muteBtn.textContent = audioTrack.enabled ? "🔇" : "🎙️";
+      } else {
+        console.warn("No audio track to mute/unmute.");
+      }
+    };
+
+    // ✅ Global leave call works
+    leaveCallBtn.onclick = () => {
+      stopCall();
+    };
 
   } catch (err) {
     console.error(err);
@@ -416,8 +432,13 @@ function createPeerConnection(peerId) {
       const muteBtn = document.createElement("button");
       muteBtn.textContent = "Mute";
       muteBtn.onclick = () => {
-        video.muted = !video.muted;
-        muteBtn.textContent = video.muted ? "Unmute" : "Mute";
+        if (localStream && localStream.getAudioTracks().length > 0) {
+          const audioTrack = localStream.getAudioTracks()[0];
+          audioTrack.enabled = !audioTrack.enabled;
+          muteBtn.textContent = audioTrack.enabled ? "🔇" : "🎙️";
+        } else {
+          console.log("No local audio track to mute/unmute.");
+        }
       };
 
       box.appendChild(video);
