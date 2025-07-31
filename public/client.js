@@ -266,9 +266,22 @@ startCallBtn.onclick = async () => {
   try {
     localStream = await navigator.mediaDevices.getUserMedia({
       video: { width: 640, height: 480 },
-      audio: true
+      audio: {
+        echoCancellation: true,
+        noiseSuppression: false
+      }
     });
-    addDummyNoise(localStream);
+
+    console.log("Local audio tracks:", localStream.getAudioTracks());
+
+    // Add dummy tone for RTP keep-alive
+    const ctx = new AudioContext();
+    const oscillator = ctx.createOscillator();
+    const dst = ctx.createMediaStreamDestination();
+    oscillator.frequency.value = 440;
+    oscillator.connect(dst);
+    oscillator.start();
+    localStream.addTrack(dst.stream.getAudioTracks()[0]);
 
     videoArea.style.display = "block";
     localVideo.srcObject = localStream;
@@ -285,18 +298,6 @@ startCallBtn.onclick = async () => {
     console.error(err);
     alert("Could not access camera/mic");
   }
-};
-
-muteBtn.onclick = () => {
-  if (localStream) {
-    const audioTrack = localStream.getAudioTracks()[0];
-    audioTrack.enabled = !audioTrack.enabled;
-    muteBtn.textContent = audioTrack.enabled ? "🔇" : "🎙️";
-  }
-};
-
-leaveCallBtn.onclick = () => {
-  stopCall();
 };
 
 function stopCall() {
@@ -419,20 +420,4 @@ function createPeerConnection(peerId) {
 
   peers[peerId] = pc;
   return pc;
-}
-
-function addDummyNoise(localStream) {
-  const ctx = new AudioContext();
-  const oscillator = ctx.createOscillator();
-  const dst = ctx.createMediaStreamDestination();
-  
-  oscillator.type = 'sine';
-  oscillator.frequency.setValueAtTime(1000, ctx.currentTime); // 1 kHz test tone
-  oscillator.start();
-  oscillator.stop(ctx.currentTime + 0.05); // super short
-
-  oscillator.connect(dst);
-
-  const dummyTrack = dst.stream.getAudioTracks()[0];
-  localStream.addTrack(dummyTrack);
 }
