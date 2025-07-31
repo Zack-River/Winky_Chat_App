@@ -3,9 +3,7 @@
 ////////////////////////////////////////////////
 let username = localStorage.getItem("winky_username");
 if (!username) {
-  username =
-    prompt("🎉 Welcome to Winky!\nChoose a fun username:") ||
-    `User${Math.floor(Math.random() * 1000)}`;
+  username = prompt("🎉 Welcome to Winky!\nChoose a fun username:") || `User${Math.floor(Math.random() * 1000)}`;
   localStorage.setItem("winky_username", username);
 }
 
@@ -34,6 +32,40 @@ const muteBtn = document.getElementById("muteBtn");
 const leaveCallBtn = document.getElementById("leaveCallBtn");
 
 ////////////////////////////////////////////////
+// ✅ GLOBAL AUDIO CONTEXT
+////////////////////////////////////////////////
+let myAudioCtx = null;
+function ensureAudioContext() {
+  if (!myAudioCtx) {
+    myAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+}
+
+function playSound(type) {
+  ensureAudioContext();
+  const audioContext = myAudioCtx;
+  const oscillator = audioContext.createOscillator();
+  const gainNode = audioContext.createGain();
+  oscillator.connect(gainNode);
+  gainNode.connect(audioContext.destination);
+
+  let freq = 800;
+  switch (type) {
+    case "send": freq = 700; break;
+    case "receive": freq = 500; break;
+    case "join": freq = 600; break;
+    case "leave": freq = 400; break;
+  }
+
+  oscillator.type = "sine";
+  oscillator.frequency.value = freq;
+  gainNode.gain.value = 0.05;
+
+  oscillator.start();
+  oscillator.stop(audioContext.currentTime + 0.2);
+}
+
+////////////////////////////////////////////////
 // ✅ JOIN CHAT ROOM
 ////////////////////////////////////////////////
 socket.on("connect", () => {
@@ -45,10 +77,10 @@ socket.on("connect", () => {
 ////////////////////////////////////////////////
 form.addEventListener("submit", (e) => {
   e.preventDefault();
+  ensureAudioContext();
   const msg = input.value.trim();
   if (msg.length > 0) {
-    const payload = { text: msg, time: Date.now() };
-    socket.emit("message", payload);
+    socket.emit("message", { text: msg, time: Date.now() });
     playSound("send");
     input.value = "";
   }
@@ -72,13 +104,8 @@ function addMessage({ from, time, text }) {
   const messageEl = document.createElement("div");
   messageEl.classList.add("message", from === username ? "you" : "reply");
   const d = new Date(time);
-  const timeStr = d.toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-  messageEl.innerHTML = `<div style="font-size: 0.75rem; opacity:0.7;">${from} • ${timeStr}</div><div>${escapeHtml(
-    text
-  )}</div>`;
+  const timeStr = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  messageEl.innerHTML = `<div style="font-size: 0.75rem; opacity:0.7;">${from} • ${timeStr}</div><div>${escapeHtml(text)}</div>`;
   messages.appendChild(messageEl);
   removeWelcome();
   playSound("receive");
@@ -92,9 +119,8 @@ function addSystemMessage(msg) {
   messageEl.textContent = msg;
   messages.appendChild(messageEl);
   messageEl.scrollIntoView({ behavior: "smooth", block: "end" });
-  const lower = msg.toLowerCase();
-  if (lower.includes("joined")) playSound("join");
-  if (lower.includes("left")) playSound("leave");
+  if (msg.toLowerCase().includes("joined")) playSound("join");
+  if (msg.toLowerCase().includes("left")) playSound("leave");
 }
 
 function removeWelcome() {
@@ -104,9 +130,7 @@ function removeWelcome() {
 
 function updateOnlineUsers(list) {
   users.textContent = list.length;
-  userList.innerHTML = list
-    .map((name) => `<span>${escapeHtml(name)}</span>`)
-    .join(", ");
+  userList.innerHTML = list.map(name => `<span>${escapeHtml(name)}</span>`).join(", ");
 }
 
 function escapeHtml(text) {
@@ -123,7 +147,6 @@ themeToggleBtn.addEventListener("click", () => {
   themeToggleBtn.textContent = isLight ? "🌞" : "🌙";
   localStorage.setItem("winky-theme", isLight ? "light" : "dark");
 });
-
 if (localStorage.getItem("winky-theme") === "light") {
   document.body.classList.add("light-mode");
   themeToggleBtn.textContent = "🌞";
@@ -132,10 +155,8 @@ if (localStorage.getItem("winky-theme") === "light") {
 ////////////////////////////////////////////////
 // ✅ EMOJI PICKER
 ////////////////////////////////////////////////
-emojiBtn.addEventListener("click", () => {
-  emojiModal.classList.toggle("hidden");
-});
-document.querySelectorAll(".emoji-item").forEach((el) => {
+emojiBtn.addEventListener("click", () => emojiModal.classList.toggle("hidden"));
+document.querySelectorAll(".emoji-item").forEach(el => {
   el.addEventListener("click", () => {
     input.value += el.textContent;
     emojiModal.classList.add("hidden");
@@ -143,8 +164,7 @@ document.querySelectorAll(".emoji-item").forEach((el) => {
   });
 });
 document.addEventListener("click", (e) => {
-  if (!emojiModal.contains(e.target) && !emojiBtn.contains(e.target))
-    emojiModal.classList.add("hidden");
+  if (!emojiModal.contains(e.target) && !emojiBtn.contains(e.target)) emojiModal.classList.add("hidden");
 });
 
 ////////////////////////////////////////////////
@@ -155,134 +175,6 @@ clearChatBtn.addEventListener("click", () => {
 });
 
 ////////////////////////////////////////////////
-// ✅ Easter eggs
-////////////////////////////////////////////////
-const easterEggs = {
-  wink: "😉",
-  party: "🎉",
-  love: "❤️",
-  fire: "🔥",
-  cool: "😎",
-  lol: "😂",
-  lmao: "🤣",
-  rofl: "🤣",
-  haha: "😆",
-  cry: "😭",
-  sad: "😢",
-  hug: "🤗",
-  ok: "👌",
-  clap: "👏",
-  yes: "✅",
-  no: "❌",
-  wow: "😮",
-  shock: "😲",
-  kiss: "😘",
-  heart: "💖",
-  star: "⭐",
-  boom: "💥",
-  100: "💯",
-  up: "👍",
-  down: "👎",
-  fist: "✊",
-  peace: "✌️",
-  pray: "🙏",
-  skull: "💀",
-  ghost: "👻",
-  alien: "👽",
-  poop: "💩",
-  fuck: "🖕🏿",
-  shit: "💩",
-  devil: "😈",
-  angel: "😇",
-  king: "👑",
-  queen: "👑",
-  crown: "👑",
-  sun: "☀️",
-  moon: "🌙",
-  sparkle: "✨",
-  rain: "🌧️",
-  snow: "❄️",
-  coffee: "☕",
-  pizza: "🍕",
-  cake: "🍰",
-  beer: "🍻",
-  drink: "🥤",
-  gift: "🎁",
-  ball: "⚽",
-  game: "🎮",
-  music: "🎵",
-  phone: "📱",
-  laptop: "💻",
-  money: "💸",
-  bomb: "💣",
-  time: "⏰",
-  sleep: "😴",
-  rip: "🪦",
-  bro: "🤝",
-  flex: "💪",
-  eyes: "👀",
-  partytime: "🥳",
-};
-
-const originalEmit = socket.emit;
-socket.emit = function (event, data) {
-  if (event === "message" && typeof data === "object" && data.text) {
-    Object.entries(easterEggs).forEach(([key, emoji]) => {
-      const regex = new RegExp(`\\b${key}\\b`, "gi");
-      data.text = data.text.replace(regex, emoji);
-    });
-  }
-  return originalEmit.call(this, event, data);
-};
-
-////////////////////////////////////////////////
-// ✅ PLAY SOUND
-////////////////////////////////////////////////
-function playSound(type) {
-  try {
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    const audioContext = new AudioContext();
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-    let freqStart = 800,
-      freqEnd = 800;
-    switch (type) {
-      case "send":
-        freqStart = 700;
-        freqEnd = 900;
-        break;
-      case "receive":
-        freqStart = 500;
-        freqEnd = 400;
-        break;
-      case "join":
-        freqStart = 600;
-        freqEnd = 750;
-        break;
-      case "leave":
-        freqStart = 500;
-        freqEnd = 350;
-        break;
-    }
-    oscillator.type = "sine";
-    oscillator.frequency.setValueAtTime(freqStart, audioContext.currentTime);
-    oscillator.frequency.exponentialRampToValueAtTime(
-      freqEnd,
-      audioContext.currentTime + 0.15
-    );
-    gainNode.gain.setValueAtTime(0.05, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(
-      0.0001,
-      audioContext.currentTime + 0.2
-    );
-    oscillator.start(audioContext.currentTime);
-    oscillator.stop(audioContext.currentTime + 0.2);
-  } catch (e) {}
-}
-
-////////////////////////////////////////////////
 // ✅ VIDEO CALL: MULTI-PEER WITH CLEANUP
 ////////////////////////////////////////////////
 let localStream;
@@ -290,23 +182,15 @@ const peers = {};
 const peerNames = {};
 let myPeerId = null;
 
-// START CALL
 startCallBtn.onclick = async () => {
+  ensureAudioContext();
   try {
     localStream = await navigator.mediaDevices.getUserMedia({
-      audio: {
-        echoCancellation: true,
-        noiseSuppression: true,
-        autoGainControl: true,
-      },
-      video: { width: 640, height: 480 },
+      audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+      video: { width: 640, height: 480 }
     });
 
-    console.log("Local audio tracks:", localStream.getAudioTracks());
-
     videoArea.style.display = "block";
-
-    // ✅ show full local stream, both audio+video
     localVideo.srcObject = localStream;
     localVideo.muted = true;
     localVideo.play();
@@ -318,18 +202,14 @@ startCallBtn.onclick = async () => {
     socket.emit("join-video", { username });
 
     muteBtn.onclick = () => {
-      if (localStream && localStream.getAudioTracks().length > 0) {
-        const audioTrack = localStream.getAudioTracks()[0];
+      const audioTrack = localStream?.getAudioTracks()[0];
+      if (audioTrack) {
         audioTrack.enabled = !audioTrack.enabled;
         muteBtn.textContent = audioTrack.enabled ? "🔇" : "🎙️";
-      } else {
-        console.log("No local audio track to mute/unmute.");
       }
     };
 
-    leaveCallBtn.onclick = () => {
-      stopCall();
-    };
+    leaveCallBtn.onclick = () => stopCall();
 
   } catch (err) {
     console.error(err);
@@ -338,15 +218,11 @@ startCallBtn.onclick = async () => {
 };
 
 function stopCall() {
-  if (localStream) localStream.getTracks().forEach((track) => track.stop());
-  Object.values(peers).forEach((pc) => pc.close());
+  localStream?.getTracks().forEach(track => track.stop());
+  localStream = null;
+  Object.values(peers).forEach(pc => pc.close());
   for (const id in peers) delete peers[id];
-  document.querySelectorAll(".video-box:not(.local)").forEach((box) => {
-    const video = box.querySelector("video");
-    const stream = video?.srcObject;
-    if (stream) stream.getTracks().forEach((track) => track.stop());
-    box.remove();
-  });
+  videoGrid.querySelectorAll(".video-box").forEach(box => box.remove());
   videoArea.style.display = "none";
   muteBtn.disabled = true;
   leaveCallBtn.disabled = true;
@@ -363,7 +239,7 @@ socket.on("new-peer", async ({ peerId, username: peerUsername }) => {
   if (peerId === myPeerId) return;
   peerNames[peerId] = peerUsername;
   const pc = createPeerConnection(peerId);
-  localStream.getTracks().forEach((track) => pc.addTrack(track, localStream));
+  localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
   const offer = await pc.createOffer();
   await pc.setLocalDescription(offer);
   socket.emit("video-offer", { peerId, offer });
@@ -372,7 +248,7 @@ socket.on("new-peer", async ({ peerId, username: peerUsername }) => {
 socket.on("video-offer", async ({ peerId, offer, username: peerUsername }) => {
   peerNames[peerId] = peerUsername;
   const pc = createPeerConnection(peerId);
-  localStream.getTracks().forEach((track) => pc.addTrack(track, localStream));
+  localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
   await pc.setRemoteDescription(new RTCSessionDescription(offer));
   const answer = await pc.createAnswer();
   await pc.setLocalDescription(answer);
@@ -390,29 +266,23 @@ socket.on("ice-candidate", ({ peerId, candidate }) => {
 });
 
 socket.on("remove-peer", ({ peerId }) => {
-  if (peers[peerId]) peers[peerId].close();
+  peers[peerId]?.close();
   delete peers[peerId];
   delete peerNames[peerId];
   const box = document.getElementById(`peer-${peerId}`);
-  if (box) {
-    const video = box.querySelector("video");
-    const stream = video?.srcObject;
-    if (stream) stream.getTracks().forEach((track) => track.stop());
-    box.remove();
-  }
+  if (box) box.remove();
 });
 
 function createPeerConnection(peerId) {
   const pc = new RTCPeerConnection({
-    iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+    iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
   });
 
-  pc.onicecandidate = (e) => {
-    if (e.candidate)
-      socket.emit("ice-candidate", { peerId, candidate: e.candidate });
+  pc.onicecandidate = e => {
+    if (e.candidate) socket.emit("ice-candidate", { peerId, candidate: e.candidate });
   };
 
-  pc.ontrack = (e) => {
+  pc.ontrack = e => {
     let box = document.getElementById(`peer-${peerId}`);
     if (!box) {
       box = document.createElement("div");
@@ -422,21 +292,12 @@ function createPeerConnection(peerId) {
       const video = document.createElement("video");
       video.autoplay = true;
       video.playsInline = true;
-      video.muted = false; // 👈 allow audio to play
 
       const label = document.createElement("div");
       label.className = "video-label";
       label.textContent = peerNames[peerId] || peerId;
 
-      const muteBtn = document.createElement("button");
-      muteBtn.textContent = "Mute";
-      muteBtn.onclick = () => {
-        video.muted = !video.muted;
-        muteBtn.textContent = video.muted ? "Unmute" : "Mute";
-      };
-
       box.appendChild(video);
-      box.appendChild(muteBtn);
       box.appendChild(label);
       videoGrid.appendChild(box);
     }
@@ -446,12 +307,7 @@ function createPeerConnection(peerId) {
   pc.onconnectionstatechange = () => {
     if (["failed", "disconnected", "closed"].includes(pc.connectionState)) {
       const box = document.getElementById(`peer-${peerId}`);
-      if (box) {
-        const video = box.querySelector("video");
-        const stream = video?.srcObject;
-        if (stream) stream.getTracks().forEach((track) => track.stop());
-        box.remove();
-      }
+      if (box) box.remove();
       delete peers[peerId];
       delete peerNames[peerId];
     }
