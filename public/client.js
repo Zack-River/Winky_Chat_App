@@ -347,6 +347,15 @@ function createPeerConnection(peerId) {
     box.querySelector("video").srcObject = e.streams[0];
   };
 
+  pc.onconnectionstatechange = () => {
+    if (["failed", "disconnected", "closed"].includes(pc.connectionState)) {
+      const box = document.getElementById(`peer-${peerId}`);
+      if (box) box.remove();
+      delete peers[peerId];
+      delete peerNames[peerId];
+    }
+  };
+
   peers[peerId] = pc;
   return pc;
 }
