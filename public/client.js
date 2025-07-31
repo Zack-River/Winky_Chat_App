@@ -27,6 +27,9 @@ const clearChatBtn = document.getElementById("clearChatBtn");
 const startCallBtn = document.getElementById("startCallBtn");
 const videoArea = document.getElementById("videoArea");
 const localVideo = document.getElementById("localVideo");
+const videoGrid = document.getElementById("video-grid");
+const muteBtn = document.getElementById("muteBtn");
+const leaveCallBtn = document.getElementById("leaveCallBtn");
 
 ////////////////////////////////////////////////
 // ✅ JOIN CHAT ROOM
@@ -144,7 +147,7 @@ clearChatBtn.addEventListener("click", () => {
 ////////////////////////////////////////////////
 // ✅ Easter eggs
 ////////////////////////////////////////////////
-const easterEggs = { lol: "😂", lmao: "🤣", rofl: "🤣", haha: "😆", wink: "😉", fire: "🔥" }; // short example
+const easterEggs = { lol: "😂", lmao: "🤣", rofl: "🤣", haha: "😆", wink: "😉", fire: "🔥" };
 const originalEmit = socket.emit;
 socket.emit = function (event, data) {
   if (event === "message" && typeof data === "object" && data.text) {
@@ -185,17 +188,12 @@ function playSound(type) {
 }
 
 ////////////////////////////////////////////////
-// ✅ VIDEO CALL: MULTI-PEER WITH USERNAMES + CONTROLS
+// ✅ VIDEO CALL: MULTI-PEER WITH CLEANUP
 ////////////////////////////////////////////////
 let localStream;
 const peers = {};
 const peerNames = {};
 let myPeerId = null;
-
-// Get the video grid container instead of reusing videoArea directly
-const videoGrid = document.getElementById("video-grid");
-const muteBtn = document.getElementById("muteBtn");
-const leaveCallBtn = document.getElementById("leaveCallBtn");
 
 // START CALL
 startCallBtn.onclick = async () => {
@@ -205,20 +203,15 @@ startCallBtn.onclick = async () => {
       audio: true
     });
 
-    // Show video area
     videoArea.style.display = "block";
-
-    // Show your local video
     localVideo.srcObject = localStream;
-    localVideo.muted = true; // avoid echo
+    localVideo.muted = true;
     localVideo.play();
 
-    // Enable mute/unmute and leave buttons
     muteBtn.disabled = false;
     leaveCallBtn.disabled = false;
     startCallBtn.disabled = true;
 
-    // Tell server you joined video
     socket.emit("join-video", { username });
 
   } catch (err) {
@@ -227,7 +220,6 @@ startCallBtn.onclick = async () => {
   }
 };
 
-// MUTE/UNMUTE LOCAL MIC
 muteBtn.onclick = () => {
   if (localStream) {
     const audioTrack = localStream.getAudioTracks()[0];
@@ -236,31 +228,24 @@ muteBtn.onclick = () => {
   }
 };
 
-// LEAVE CALL
 leaveCallBtn.onclick = () => {
   stopCall();
 };
 
 function stopCall() {
-  // Stop local tracks
   if (localStream) localStream.getTracks().forEach(track => track.stop());
-
-  // Close all peer connections
   Object.values(peers).forEach(pc => pc.close());
   for (const id in peers) delete peers[id];
-
-  // Remove all peer video boxes except your local
-  document.querySelectorAll(".video-box:not(.local)").forEach(box => box.remove());
-
-  // Hide video area
+  document.querySelectorAll(".video-box:not(.local)").forEach(box => {
+    const video = box.querySelector("video");
+    const stream = video?.srcObject;
+    if (stream) stream.getTracks().forEach(track => track.stop());
+    box.remove();
+  });
   videoArea.style.display = "none";
-
-  // Reset buttons
   muteBtn.disabled = true;
   leaveCallBtn.disabled = true;
   startCallBtn.disabled = false;
-
-  // Tell server
   socket.emit("leave-video");
 }
 
@@ -272,7 +257,6 @@ socket.on("init-peer-id", ({ peerId }) => {
 socket.on("new-peer", async ({ peerId, username: peerUsername }) => {
   if (peerId === myPeerId) return;
   peerNames[peerId] = peerUsername;
-
   const pc = createPeerConnection(peerId);
   localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
   const offer = await pc.createOffer();
@@ -305,7 +289,12 @@ socket.on("remove-peer", ({ peerId }) => {
   delete peers[peerId];
   delete peerNames[peerId];
   const box = document.getElementById(`peer-${peerId}`);
-  if (box) box.remove();
+  if (box) {
+    const video = box.querySelector("video");
+    const stream = video?.srcObject;
+    if (stream) stream.getTracks().forEach(track => track.stop());
+    box.remove();
+  }
 });
 
 function createPeerConnection(peerId) {
@@ -350,7 +339,12 @@ function createPeerConnection(peerId) {
   pc.onconnectionstatechange = () => {
     if (["failed", "disconnected", "closed"].includes(pc.connectionState)) {
       const box = document.getElementById(`peer-${peerId}`);
-      if (box) box.remove();
+      if (box) {
+        const video = box.querySelector("video");
+        const stream = video?.srcObject;
+        if (stream) stream.getTracks().forEach(track => track.stop());
+        box.remove();
+      }
       delete peers[peerId];
       delete peerNames[peerId];
     }
