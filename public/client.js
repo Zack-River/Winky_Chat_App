@@ -306,10 +306,10 @@ startCallBtn.onclick = async () => {
 
     videoArea.style.display = "block";
 
-    // ✅ Play full local stream (video + audio goes to peers)
+    // ✅ show full local stream, both audio+video
     localVideo.srcObject = localStream;
     localVideo.muted = true;
-    await localVideo.play();
+    localVideo.play();
 
     muteBtn.disabled = false;
     leaveCallBtn.disabled = false;
@@ -317,18 +317,16 @@ startCallBtn.onclick = async () => {
 
     socket.emit("join-video", { username });
 
-    // ✅ Global mute button works
     muteBtn.onclick = () => {
-      const audioTrack = localStream?.getAudioTracks()[0];
-      if (audioTrack) {
+      if (localStream && localStream.getAudioTracks().length > 0) {
+        const audioTrack = localStream.getAudioTracks()[0];
         audioTrack.enabled = !audioTrack.enabled;
         muteBtn.textContent = audioTrack.enabled ? "🔇" : "🎙️";
       } else {
-        console.warn("No audio track to mute/unmute.");
+        console.log("No local audio track to mute/unmute.");
       }
     };
 
-    // ✅ Global leave call works
     leaveCallBtn.onclick = () => {
       stopCall();
     };
@@ -424,6 +422,7 @@ function createPeerConnection(peerId) {
       const video = document.createElement("video");
       video.autoplay = true;
       video.playsInline = true;
+      video.muted = false; // 👈 allow audio to play
 
       const label = document.createElement("div");
       label.className = "video-label";
@@ -432,13 +431,8 @@ function createPeerConnection(peerId) {
       const muteBtn = document.createElement("button");
       muteBtn.textContent = "Mute";
       muteBtn.onclick = () => {
-        if (localStream && localStream.getAudioTracks().length > 0) {
-          const audioTrack = localStream.getAudioTracks()[0];
-          audioTrack.enabled = !audioTrack.enabled;
-          muteBtn.textContent = audioTrack.enabled ? "🔇" : "🎙️";
-        } else {
-          console.log("No local audio track to mute/unmute.");
-        }
+        video.muted = !video.muted;
+        muteBtn.textContent = video.muted ? "Unmute" : "Mute";
       };
 
       box.appendChild(video);
