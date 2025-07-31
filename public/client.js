@@ -1,14 +1,20 @@
+////////////////////////////////////////////////
 // ✅ USERNAME SETUP
+////////////////////////////////////////////////
 let username = localStorage.getItem("winky_username");
 if (!username) {
   username = prompt("🎉 Welcome to Winky!\nChoose a fun username:") || `User${Math.floor(Math.random() * 1000)}`;
   localStorage.setItem("winky_username", username);
 }
 
+////////////////////////////////////////////////
 // ✅ SOCKET.IO
+////////////////////////////////////////////////
 const socket = io();
 
+////////////////////////////////////////////////
 // ✅ DOM REFERENCES
+////////////////////////////////////////////////
 const form = document.getElementById("form");
 const input = document.getElementById("input");
 const messages = document.getElementById("messages");
@@ -22,12 +28,16 @@ const startCallBtn = document.getElementById("startCallBtn");
 const videoArea = document.getElementById("videoArea");
 const localVideo = document.getElementById("localVideo");
 
+////////////////////////////////////////////////
 // ✅ JOIN CHAT ROOM
+////////////////////////////////////////////////
 socket.on("connect", () => {
   socket.emit("join", username);
 });
 
+////////////////////////////////////////////////
 // ✅ SEND CHAT MESSAGE
+////////////////////////////////////////////////
 form.addEventListener("submit", (e) => {
   e.preventDefault();
   const msg = input.value.trim();
@@ -39,7 +49,6 @@ form.addEventListener("submit", (e) => {
   }
 });
 
-// ✅ ENTER TO SEND
 input.addEventListener("keypress", (e) => {
   if (e.key === "Enter" && !e.shiftKey) {
     e.preventDefault();
@@ -47,30 +56,25 @@ input.addEventListener("keypress", (e) => {
   }
 });
 
+////////////////////////////////////////////////
 // ✅ INCOMING CHAT
+////////////////////////////////////////////////
 socket.on("message", addMessage);
 socket.on("system", addSystemMessage);
 socket.on("online-users", updateOnlineUsers);
 
-// ✅ ADD MESSAGE
 function addMessage({ from, time, text }) {
   const messageEl = document.createElement("div");
   messageEl.classList.add("message", from === username ? "you" : "reply");
   const d = new Date(time);
   const timeStr = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-
-  messageEl.innerHTML = `
-    <div style="font-size: 0.75rem; opacity:0.7;">${from} • ${timeStr}</div>
-    <div>${escapeHtml(text)}</div>
-  `;
-
+  messageEl.innerHTML = `<div style="font-size: 0.75rem; opacity:0.7;">${from} • ${timeStr}</div><div>${escapeHtml(text)}</div>`;
   messages.appendChild(messageEl);
   removeWelcome();
   playSound('receive');
   messageEl.scrollIntoView({ behavior: "smooth", block: "end" });
 }
 
-// ✅ SYSTEM MESSAGE
 function addSystemMessage(msg) {
   removeWelcome();
   const messageEl = document.createElement("div");
@@ -99,7 +103,9 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
+////////////////////////////////////////////////
 // ✅ THEME TOGGLE
+////////////////////////////////////////////////
 themeToggleBtn.addEventListener("click", () => {
   const isLight = document.body.classList.toggle("light-mode");
   themeToggleBtn.textContent = isLight ? "🌞" : "🌙";
@@ -111,7 +117,9 @@ if (localStorage.getItem("winky-theme") === "light") {
   themeToggleBtn.textContent = "🌞";
 }
 
+////////////////////////////////////////////////
 // ✅ EMOJI PICKER
+////////////////////////////////////////////////
 emojiBtn.addEventListener("click", () => {
   emojiModal.classList.toggle("hidden");
 });
@@ -126,84 +134,17 @@ document.addEventListener("click", (e) => {
   if (!emojiModal.contains(e.target) && !emojiBtn.contains(e.target)) emojiModal.classList.add("hidden");
 });
 
+////////////////////////////////////////////////
 // ✅ CLEAR CHAT
+////////////////////////////////////////////////
 clearChatBtn.addEventListener("click", () => {
-  messages.innerHTML = `
-    <div class="welcome-message">
-      <div class="welcome-icon">🎉</div>
-      <p>Welcome to Winky! Start chatting instantly</p>
-    </div>
-  `;
+  messages.innerHTML = `<div class="welcome-message"><div class="welcome-icon">🎉</div><p>Welcome to Winky! Start chatting instantly</p></div>`;
 });
 
+////////////////////////////////////////////////
 // ✅ Easter eggs
-const easterEggs = {
-  wink: "😉",
-  party: "🎉",
-  love: "❤️",
-  fire: "🔥",
-  cool: "😎",
-  lol: "😂",
-  lmao: "🤣",
-  rofl: "🤣",
-  haha: "😆",
-  cry: "😭",
-  sad: "😢",
-  hug: "🤗",
-  ok: "👌",
-  clap: "👏",
-  yes: "✅",
-  no: "❌",
-  wow: "😮",
-  shock: "😲",
-  kiss: "😘",
-  heart: "💖",
-  star: "⭐",
-  boom: "💥",
-  100: "💯",
-  up: "👍",
-  down: "👎",
-  fist: "✊",
-  peace: "✌️",
-  pray: "🙏",
-  skull: "💀",
-  ghost: "👻",
-  alien: "👽",
-  poop: "💩",
-  fuck: "🖕🏿",
-  shit: "💩",
-  devil: "😈",
-  angel: "😇",
-  king: "👑",
-  queen: "👑",
-  crown: "👑",
-  sun: "☀️",
-  moon: "🌙",
-  sparkle: "✨",
-  rain: "🌧️",
-  snow: "❄️",
-  coffee: "☕",
-  pizza: "🍕",
-  cake: "🍰",
-  beer: "🍻",
-  drink: "🥤",
-  gift: "🎁",
-  ball: "⚽",
-  game: "🎮",
-  music: "🎵",
-  phone: "📱",
-  laptop: "💻",
-  money: "💸",
-  bomb: "💣",
-  time: "⏰",
-  sleep: "😴",
-  rip: "🪦",
-  bro: "🤝",
-  flex: "💪",
-  eyes: "👀",
-  partytime: "🥳"
-};
-
+////////////////////////////////////////////////
+const easterEggs = { lol: "😂", lmao: "🤣", rofl: "🤣", haha: "😆", wink: "😉", fire: "🔥" }; // short example
 const originalEmit = socket.emit;
 socket.emit = function (event, data) {
   if (event === "message" && typeof data === "object" && data.text) {
@@ -215,7 +156,9 @@ socket.emit = function (event, data) {
   return originalEmit.call(this, event, data);
 };
 
+////////////////////////////////////////////////
 // ✅ PLAY SOUND
+////////////////////////////////////////////////
 function playSound(type) {
   try {
     const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -241,41 +184,94 @@ function playSound(type) {
   } catch (e) {}
 }
 
-// =======================================
-// ✅ ✅ VIDEO CALL: MULTI-PEER with Username Labels
-// =======================================
-
+////////////////////////////////////////////////
+// ✅ VIDEO CALL: MULTI-PEER WITH USERNAMES + CONTROLS
+////////////////////////////////////////////////
 let localStream;
 const peers = {};
+const peerNames = {};
 let myPeerId = null;
-const peerNames = {}; // 👈 stores peerId -> username
 
+// Get the video grid container instead of reusing videoArea directly
+const videoGrid = document.getElementById("video-grid");
+const muteBtn = document.getElementById("muteBtn");
+const leaveCallBtn = document.getElementById("leaveCallBtn");
+
+// START CALL
 startCallBtn.onclick = async () => {
   try {
     localStream = await navigator.mediaDevices.getUserMedia({
       video: { width: 640, height: 480 },
       audio: true
     });
+
+    // Show video area
+    videoArea.style.display = "block";
+
+    // Show your local video
     localVideo.srcObject = localStream;
-    localVideo.muted = true;
-    socket.emit("join-video", { username }); // 👈 Send name too!
+    localVideo.muted = true; // avoid echo
+    localVideo.play();
+
+    // Enable mute/unmute and leave buttons
+    muteBtn.disabled = false;
+    leaveCallBtn.disabled = false;
     startCallBtn.disabled = true;
+
+    // Tell server you joined video
+    socket.emit("join-video", { username });
+
   } catch (err) {
     console.error(err);
     alert("Could not access camera/mic");
   }
 };
 
+// MUTE/UNMUTE LOCAL MIC
+muteBtn.onclick = () => {
+  if (localStream) {
+    const audioTrack = localStream.getAudioTracks()[0];
+    audioTrack.enabled = !audioTrack.enabled;
+    muteBtn.textContent = audioTrack.enabled ? "🔇" : "🎙️";
+  }
+};
+
+// LEAVE CALL
+leaveCallBtn.onclick = () => {
+  stopCall();
+};
+
+function stopCall() {
+  // Stop local tracks
+  if (localStream) localStream.getTracks().forEach(track => track.stop());
+
+  // Close all peer connections
+  Object.values(peers).forEach(pc => pc.close());
+  for (const id in peers) delete peers[id];
+
+  // Remove all peer video boxes except your local
+  document.querySelectorAll(".video-box:not(.local)").forEach(box => box.remove());
+
+  // Hide video area
+  videoArea.style.display = "none";
+
+  // Reset buttons
+  muteBtn.disabled = true;
+  leaveCallBtn.disabled = true;
+  startCallBtn.disabled = false;
+
+  // Tell server
+  socket.emit("leave-video");
+}
+
 socket.on("init-peer-id", ({ peerId }) => {
   myPeerId = peerId;
-  peerNames[peerId] = username; // 👈 Save your own
+  peerNames[peerId] = username;
 });
 
 socket.on("new-peer", async ({ peerId, username: peerUsername }) => {
   if (peerId === myPeerId) return;
-
-  console.log("New peer:", peerId, peerUsername);
-  peerNames[peerId] = peerUsername; // 👈 Save name
+  peerNames[peerId] = peerUsername;
 
   const pc = createPeerConnection(peerId);
   localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
@@ -285,7 +281,7 @@ socket.on("new-peer", async ({ peerId, username: peerUsername }) => {
 });
 
 socket.on("video-offer", async ({ peerId, offer, username: peerUsername }) => {
-  peerNames[peerId] = peerUsername; // 👈 Save name
+  peerNames[peerId] = peerUsername;
   const pc = createPeerConnection(peerId);
   localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
   await pc.setRemoteDescription(new RTCSessionDescription(offer));
@@ -305,13 +301,11 @@ socket.on("ice-candidate", ({ peerId, candidate }) => {
 });
 
 socket.on("remove-peer", ({ peerId }) => {
-  if (peers[peerId]) {
-    peers[peerId].close();
-    delete peers[peerId];
-  }
+  if (peers[peerId]) peers[peerId].close();
+  delete peers[peerId];
+  delete peerNames[peerId];
   const box = document.getElementById(`peer-${peerId}`);
   if (box) box.remove();
-  delete peerNames[peerId]; // ✅ Clean up name too
 });
 
 function createPeerConnection(peerId) {
@@ -324,8 +318,6 @@ function createPeerConnection(peerId) {
   };
 
   pc.ontrack = e => {
-    console.log("Track for", peerId);
-
     let box = document.getElementById(`peer-${peerId}`);
     if (!box) {
       box = document.createElement("div");
@@ -336,6 +328,10 @@ function createPeerConnection(peerId) {
       video.autoplay = true;
       video.playsInline = true;
 
+      const label = document.createElement("div");
+      label.className = "video-label";
+      label.textContent = peerNames[peerId] || peerId;
+
       const muteBtn = document.createElement("button");
       muteBtn.textContent = "Mute";
       muteBtn.onclick = () => {
@@ -345,17 +341,10 @@ function createPeerConnection(peerId) {
 
       box.appendChild(video);
       box.appendChild(muteBtn);
-
-      const label = document.createElement("div");
-      label.className = "video-label";
-      label.textContent = peerNames[peerId] || peerId; // ✅ Show username!
       box.appendChild(label);
-
-      videoArea.appendChild(box);
+      videoGrid.appendChild(box);
     }
-
-    const remoteVideo = box.querySelector("video");
-    remoteVideo.srcObject = e.streams[0];
+    box.querySelector("video").srcObject = e.streams[0];
   };
 
   peers[peerId] = pc;

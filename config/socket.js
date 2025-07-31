@@ -10,8 +10,11 @@ module.exports = (httpServer) => {
     },
   });
 
+  // Store video call peers: socket.id -> username
+  const videoPeers = new Map();
+
   io.on('connection', (socket) => {
-    console.log('A user connected');
+    console.log(`✅ New connection: ${socket.id}`);
 
     // ✅ JOIN CHAT
     socket.on('join', (username) => {
@@ -36,33 +39,61 @@ module.exports = (httpServer) => {
 
     // ✅ VIDEO: Join room
     socket.on("join-video", () => {
-      console.log(`${socket.username} wants to join video`);
-      // Notify others to connect to this new peer
-      socket.broadcast.emit("new-peer", { peerId: socket.id });
+      const name = socket.username || "Anonymous";
+      videoPeers.set(socket.id, name);
+      console.log(`🎥 ${name} joined video`);
+
+      // Tell the new peer its ID
+      socket.emit("init-peer-id", { peerId: socket.id });
+
+      // Notify others to connect to this peer
+      socket.broadcast.emit("new-peer", {
+        peerId: socket.id,
+        username: name
+      });
     });
 
     // ✅ VIDEO: Offer
     socket.on("video-offer", ({ peerId, offer }) => {
-      io.to(peerId).emit("video-offer", { peerId: socket.id, offer });
+      io.to(peerId).emit("video-offer", {
+        peerId: socket.id,
+        offer,
+        username: socket.username || "Anonymous"
+      });
     });
 
     // ✅ VIDEO: Answer
     socket.on("video-answer", ({ peerId, answer }) => {
-      io.to(peerId).emit("video-answer", { peerId: socket.id, answer });
+      io.to(peerId).emit("video-answer", {
+        peerId: socket.id,
+        answer
+      });
     });
 
     // ✅ VIDEO: ICE
     socket.on("ice-candidate", ({ peerId, candidate }) => {
-      io.to(peerId).emit("ice-candidate", { peerId: socket.id, candidate });
+      io.to(peerId).emit("ice-candidate", {
+        peerId: socket.id,
+        candidate
+      });
     });
 
-    // ✅ DISCONNECT
+    // ✅ LEAVE VIDEO or DISCONNECT
     socket.on('disconnect', () => {
       const name = socket.username || 'Anonymous';
       console.log(`${name} disconnected`);
+
+      // Notify chat
       socket.broadcast.emit('system', `${name} left the chat`);
       User.removeUser(socket.id);
       io.emit('online-users', User.getOnlineUsers());
+
+      // Notify video peers
+      if (videoPeers.has(socket.id)) {
+        console.log(`❌ ${name} left video`);
+        videoPeers.delete(socket.id);
+        io.emit("remove-peer", { peerId: socket.id });
+      }
     });
   });
 };
