@@ -147,12 +147,78 @@ clearChatBtn.addEventListener("click", () => {
 ////////////////////////////////////////////////
 // ✅ Easter eggs
 ////////////////////////////////////////////////
-const easterEggs = { lol: "😂", lmao: "🤣", rofl: "🤣", haha: "😆", wink: "😉", fire: "🔥" };
+const easterEggs = {
+  wink: "😉",
+  party: "🎉",
+  love: "❤️",
+  fire: "🔥",
+  cool: "😎",
+  lol: "😂",
+  lmao: "🤣",
+  rofl: "🤣",
+  haha: "😆",
+  cry: "😭",
+  sad: "😢",
+  hug: "🤗",
+  ok: "👌",
+  clap: "👏",
+  yes: "✅",
+  no: "❌",
+  wow: "😮",
+  shock: "😲",
+  kiss: "😘",
+  heart: "💖",
+  star: "⭐",
+  boom: "💥",
+  "100": "💯",
+  up: "👍",
+  down: "👎",
+  fist: "✊",
+  peace: "✌️",
+  pray: "🙏",
+  skull: "💀",
+  ghost: "👻",
+  alien: "👽",
+  poop: "💩",
+  fuck: "🖕🏿",
+  shit: "💩",
+  devil: "😈",
+  angel: "😇",
+  king: "👑",
+  queen: "👑",
+  crown: "👑",
+  sun: "☀️",
+  moon: "🌙",
+  sparkle: "✨",
+  rain: "🌧️",
+  snow: "❄️",
+  coffee: "☕",
+  pizza: "🍕",
+  cake: "🍰",
+  beer: "🍻",
+  drink: "🥤",
+  gift: "🎁",
+  ball: "⚽",
+  game: "🎮",
+  music: "🎵",
+  phone: "📱",
+  laptop: "💻",
+  money: "💸",
+  bomb: "💣",
+  time: "⏰",
+  sleep: "😴",
+  rip: "🪦",
+  bro: "🤝",
+  flex: "💪",
+  eyes: "👀",
+  partytime: "🥳"
+};
+
 const originalEmit = socket.emit;
 socket.emit = function (event, data) {
   if (event === "message" && typeof data === "object" && data.text) {
     Object.entries(easterEggs).forEach(([key, emoji]) => {
-      const regex = new RegExp(`(:*${key}:*)`, "gi");
+      const regex = new RegExp(`\\b${key}\\b`, "gi");
       data.text = data.text.replace(regex, emoji);
     });
   }
