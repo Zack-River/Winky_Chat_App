@@ -242,12 +242,13 @@ function playSound(type) {
 }
 
 // =======================================
-// ✅ ✅ VIDEO CALL: MULTI-PEER
+// ✅ ✅ VIDEO CALL: MULTI-PEER with Username Labels
 // =======================================
 
 let localStream;
 const peers = {};
 let myPeerId = null;
+const peerNames = {}; // 👈 stores peerId -> username
 
 startCallBtn.onclick = async () => {
   try {
@@ -257,7 +258,7 @@ startCallBtn.onclick = async () => {
     });
     localVideo.srcObject = localStream;
     localVideo.muted = true;
-    socket.emit("join-video");
+    socket.emit("join-video", { username }); // 👈 Send name too!
     startCallBtn.disabled = true;
   } catch (err) {
     console.error(err);
@@ -267,11 +268,15 @@ startCallBtn.onclick = async () => {
 
 socket.on("init-peer-id", ({ peerId }) => {
   myPeerId = peerId;
+  peerNames[peerId] = username; // 👈 Save your own
 });
 
-socket.on("new-peer", async ({ peerId }) => {
+socket.on("new-peer", async ({ peerId, username: peerUsername }) => {
   if (peerId === myPeerId) return;
-  console.log("New peer:", peerId);
+
+  console.log("New peer:", peerId, peerUsername);
+  peerNames[peerId] = peerUsername; // 👈 Save name
+
   const pc = createPeerConnection(peerId);
   localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
   const offer = await pc.createOffer();
@@ -279,7 +284,8 @@ socket.on("new-peer", async ({ peerId }) => {
   socket.emit("video-offer", { peerId, offer });
 });
 
-socket.on("video-offer", async ({ peerId, offer }) => {
+socket.on("video-offer", async ({ peerId, offer, username: peerUsername }) => {
+  peerNames[peerId] = peerUsername; // 👈 Save name
   const pc = createPeerConnection(peerId);
   localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
   await pc.setRemoteDescription(new RTCSessionDescription(offer));
@@ -305,6 +311,7 @@ socket.on("remove-peer", ({ peerId }) => {
   }
   const box = document.getElementById(`peer-${peerId}`);
   if (box) box.remove();
+  delete peerNames[peerId]; // ✅ Clean up name too
 });
 
 function createPeerConnection(peerId) {
@@ -329,7 +336,6 @@ function createPeerConnection(peerId) {
       video.autoplay = true;
       video.playsInline = true;
 
-      // ✅ Mute toggle
       const muteBtn = document.createElement("button");
       muteBtn.textContent = "Mute";
       muteBtn.onclick = () => {
@@ -342,7 +348,7 @@ function createPeerConnection(peerId) {
 
       const label = document.createElement("div");
       label.className = "video-label";
-      label.textContent = peerId;
+      label.textContent = peerNames[peerId] || peerId; // ✅ Show username!
       box.appendChild(label);
 
       videoArea.appendChild(box);
