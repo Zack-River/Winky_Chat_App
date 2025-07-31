@@ -246,7 +246,7 @@ body {
   flex-direction: column;
   gap: 12px;
   min-height: 100%;
-  padding-bottom: 100px;
+  /* padding-bottom: 100px; */
 }
 
 .welcome-message {
